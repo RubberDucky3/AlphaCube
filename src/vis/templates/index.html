@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AlphaCube 3D Visualizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #121212;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="info">
+        <h2>AlphaCube Agent</h2>
+        <p>Episode: <span id="ep">0</span></p>
+        <p>Scramble Len: <span id="slen">1</span></p>
+        <p>Success Rate: <span id="srate">0</span>%</p>
+        <p>Reward: <span id="rew">0</span></p>
+        <p>Last Move: <span id="move">-</span></p>
+        <p>Status: <span id="status">Scrambling...</span></p>
+    </div>
+
+    <div id="controls">
+        <button onclick="toggle()">Play / Pause</button>
+    </div>
+
+    <script>
+        // THREE.JS SETUP
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x121212);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(5, 5, 7);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // Lighting
+        const ambit = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambit);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        backLight.position.set(-10, -20, -10);
+        scene.add(backLight);
+
+        // CUBE GEOMETRY
+        const geometry = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+
+        // Premium Color Palette
+        const C = {
+            W: 0xffffff, // White
+            Y: 0xffd500, // Yellow
+            G: 0x009e60, // Green
+            B: 0x0051ba, // Blue
+            O: 0xff5800, // Orange
+            R: 0xC41E3A, // Red
+            X: 0x111111  // Inner Black
+        };
+
+        const MATS = {
+            R: new THREE.MeshStandardMaterial({ color: C.R, roughness: 0.1, metalness: 0.1 }),
+            L: new THREE.MeshStandardMaterial({ color: C.O, roughness: 0.1, metalness: 0.1 }),
+            U: new THREE.MeshStandardMaterial({ color: C.W, roughness: 0.1, metalness: 0.1 }),
+            D: new THREE.MeshStandardMaterial({ color: C.Y, roughness: 0.1, metalness: 0.1 }),
+            F: new THREE.MeshStandardMaterial({ color: C.G, roughness: 0.1, metalness: 0.1 }),
+            B: new THREE.MeshStandardMaterial({ color: C.B, roughness: 0.1, metalness: 0.1 }),
+            X: new THREE.MeshStandardMaterial({ color: C.X, roughness: 1.0, metalness: 0.0 })
+        };
+
+        const meshes = [];
+        for (let z = -1; z <= 1; z++) {
+            for (let y = -1; y <= 1; y++) {
+                for (let x = -1; x <= 1; x++) {
+                    const mat = [MATS.X, MATS.X, MATS.X, MATS.X, MATS.X, MATS.X];
+                    const mesh = new THREE.Mesh(geometry, mat);
+                    mesh.position.set(x, y, z);
+                    scene.add(mesh);
+                    meshes.push({ mesh: mesh, x: x, y: y, z: z });
+                }
+            }
+        }
+
+        function getMeshAt(x, y, z) {
+            return meshes.find(m => m.x === x && m.y === y && m.z === z);
+        }
+
+        // Piece Characteristic Colors (Stickers it HAS)
+        // Corner 0: URF -> {U:W, R:R, F:G}
+        function getPieceColors(type, idx) {
+            if (type === 'c') {
+                const c = [
+                    { U: 'W', R: 'R', F: 'G' }, // 0:URF
+                    { U: 'W', F: 'G', L: 'O' }, // 1:UFL
+                    { U: 'W', L: 'O', B: 'B' }, // 2:ULB
+                    { U: 'W', B: 'B', R: 'R' }, // 3:UBR
+                    { D: 'Y', F: 'G', R: 'R' }, // 4:DFR
+                    { D: 'Y', L: 'O', F: 'G' }, // 5:DLF
+                    { D: 'Y', B: 'B', L: 'O' }, // 6:DBL
+                    { D: 'Y', R: 'R', B: 'B' }  // 7:DRB
+                ];
+                return c[idx];
+            } else {
+                const e = [
+                    { U: 'W', R: 'R' }, // 0:UR
+                    { U: 'W', F: 'G' }, // 1:UF
+                    { U: 'W', L: 'O' }, // 2:UL
+                    { U: 'W', B: 'B' }, // 3:UB
+                    { D: 'Y', R: 'R' }, // 4:DR
+                    { D: 'Y', F: 'G' }, // 5:DF
+                    { D: 'Y', L: 'O' }, // 6:DL
+                    { D: 'Y', B: 'B' }, // 7:DB
+                    { F: 'G', R: 'R' }, // 8:FR
+                    { F: 'G', L: 'O' }, // 9:FL
+                    { B: 'B', L: 'O' }, // 10:BL
+                    { B: 'B', R: 'R' }  // 11:BR
+                ];
+                return e[idx];
+            }
+        }
+
+        // COORD MAPPING (Slot Index -> x,y,z)
+        const C_SLOTS = [
+            [1, 1, 1], [-1, 1, 1], [-1, 1, -1], [1, 1, -1],
+            [1, -1, 1], [-1, -1, 1], [-1, -1, -1], [1, -1, -1]
+        ];
+        const E_SLOTS = [
+            [1, 1, 0], [0, 1, 1], [-1, 1, 0], [0, 1, -1],
+            [1, -1, 0], [0, -1, 1], [-1, -1, 0], [0, -1, -1],
+            [1, 0, 1], [-1, 0, 1], [-1, 0, -1], [1, 0, -1]
+        ];
+
+        function updateCube(state) {
+            // Reset all to black
+            meshes.forEach(m => m.mesh.material = [MATS.X, MATS.X, MATS.X, MATS.X, MATS.X, MATS.X]);
+
+            // Centers (Fixed)
+            getMeshAt(0, 1, 0).mesh.material[2] = MATS.U;
+            getMeshAt(0, -1, 0).mesh.material[3] = MATS.D;
+            getMeshAt(1, 0, 0).mesh.material[0] = MATS.R;
+            getMeshAt(-1, 0, 0).mesh.material[1] = MATS.L;
+            getMeshAt(0, 0, 1).mesh.material[4] = MATS.F;
+            getMeshAt(0, 0, -1).mesh.material[5] = MATS.B;
+
+            // Helper to apply stickers to a mesh based on visible faces
+            function applyToMesh(mObj, colors) {
+                // Box Order: 0:R(+x), 1:L(-x), 2:U(+y), 3:D(-y), 4:F(+z), 5:B(-z)
+                const x = mObj.x, y = mObj.y, z = mObj.z;
+                if (x === 1 && colors.R) mObj.mesh.material[0] = MATS[colors.R];
+                if (x === -1 && colors.L) mObj.mesh.material[1] = MATS[colors.L];
+                if (y === 1 && colors.U) mObj.mesh.material[2] = MATS[colors.U];
+                if (y === -1 && colors.D) mObj.mesh.material[3] = MATS[colors.D];
+                if (z === 1 && colors.F) mObj.mesh.material[4] = MATS[colors.F];
+                if (z === -1 && colors.B) mObj.mesh.material[5] = MATS[colors.B];
+                mObj.mesh.material.needsUpdate = true;
+            }
+
+            // Corners
+            for (let i = 0; i < 8; i++) {
+                const pieceIdx = state.cp[i];
+                const ori = state.co[i];
+                const pieceColors = getPieceColors('c', pieceIdx);
+
+                // Simplified orientation: just map top face color to current slot's top if possible
+                // Real mapping requires a rotation matrix. But for watching training, 
+                // seeing the piece colors at the right slot is the primary goal.
+                const coords = C_SLOTS[i];
+                const mObj = getMeshAt(coords[0], coords[1], coords[2]);
+                applyToMesh(mObj, pieceColors);
+            }
+
+            // Edges
+            for (let i = 0; i < 12; i++) {
+                const pieceIdx = state.ep[i];
+                const pieceColors = getPieceColors('e', pieceIdx);
+                const coords = E_SLOTS[i];
+                const mObj = getMeshAt(coords[0], coords[1], coords[2]);
+                applyToMesh(mObj, pieceColors);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // POLLING LOOP
+        function fetchState() {
+            fetch('/state')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('ep').innerText = data.episode;
+                    document.getElementById('slen').innerText = data.scramble_len;
+                    document.getElementById('srate').innerText = data.success_rate;
+                    document.getElementById('rew').innerText = data.reward;
+                    document.getElementById('move').innerText = data.last_move;
+                    document.getElementById('status').innerText = data.is_solved ? "SOLVED!" : (data.running ? "Training..." : "Paused");
+
+                    if (data.cube_state) {
+                        updateCube(data.cube_state);
+                    }
+                });
+        }
+        setInterval(fetchState, 100);
+
+        function toggle() {
+            fetch('/toggle');
+        }
+    </script>
+</body>
+
+</html>

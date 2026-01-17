@@ -1,0 +1,23 @@
+{
+    "name": "Yellow F2L Pair 1 (FR)",
+    "required_corners": [
+        {
+            "id": 4,
+            "pos": 4,
+            "ori": 0
+        }
+    ],
+    "required_edges": [
+        {
+            "id": 8,
+            "pos": 8,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "[G] [G] [R] [R]",
+        "[G] [E] [R] [E]",
+        "    [C] [Y]    ",
+        "    [Y] [Y]    "
+    ]
+}

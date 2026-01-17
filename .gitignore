@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+ui_cross_solver/venv/
+ui_cross_solver/RubiksSolverCpp/solver_bridge
+ui_cross_solver/RubiksSolver/table/
+RubiksSolver/table/
+*.dat
+*.db
+scraper.log

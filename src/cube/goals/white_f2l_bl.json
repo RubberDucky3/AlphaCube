@@ -1,0 +1,23 @@
+{
+    "name": "White F2L Pair 3 (BL)",
+    "required_corners": [
+        {
+            "id": 2,
+            "pos": 2,
+            "ori": 0
+        }
+    ],
+    "required_edges": [
+        {
+            "id": 10,
+            "pos": 10,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "    [W] [W]    ",
+        "    [C] [W]    ",
+        "[B] [B] [O] [O]",
+        "[B] [E] [O] [E]"
+    ]
+}

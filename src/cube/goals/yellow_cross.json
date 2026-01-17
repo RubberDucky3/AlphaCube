@@ -1,0 +1,31 @@
+{
+    "name": "Yellow Cross",
+    "face": "D",
+    "required_edges": [
+        {
+            "id": 4,
+            "pos": 4,
+            "ori": 0
+        },
+        {
+            "id": 5,
+            "pos": 5,
+            "ori": 0
+        },
+        {
+            "id": 6,
+            "pos": 6,
+            "ori": 0
+        },
+        {
+            "id": 7,
+            "pos": 7,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "    [Y]    ",
+        "[Y] [Y] [Y]",
+        "    [Y]    "
+    ]
+}

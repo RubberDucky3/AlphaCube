@@ -1,0 +1,15 @@
+{
+    "name": "Yellow Edge DR",
+    "required_edges": [
+        {
+            "id": 4,
+            "pos": 4,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "    [ ] [Y] [ ]",
+        "    [ ] [ ] [ ]",
+        "    [ ] [ ] [ ]"
+    ]
+}

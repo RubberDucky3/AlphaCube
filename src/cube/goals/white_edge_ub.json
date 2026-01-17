@@ -1,0 +1,15 @@
+{
+    "name": "White Edge UB",
+    "required_edges": [
+        {
+            "id": 3,
+            "pos": 3,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "    [ ] [ ] [ ]",
+        "    [ ] [ ] [W]",
+        "    [ ] [ ] [ ]"
+    ]
+}

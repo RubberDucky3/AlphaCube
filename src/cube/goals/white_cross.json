@@ -1,0 +1,31 @@
+{
+    "name": "White Cross",
+    "face": "U",
+    "required_edges": [
+        {
+            "id": 0,
+            "pos": 0,
+            "ori": 0
+        },
+        {
+            "id": 1,
+            "pos": 1,
+            "ori": 0
+        },
+        {
+            "id": 2,
+            "pos": 2,
+            "ori": 0
+        },
+        {
+            "id": 3,
+            "pos": 3,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "    [W]    ",
+        "[W] [W] [W]",
+        "    [W]    "
+    ]
+}

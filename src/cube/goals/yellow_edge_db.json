@@ -1,0 +1,15 @@
+{
+    "name": "Yellow Edge DB",
+    "required_edges": [
+        {
+            "id": 7,
+            "pos": 7,
+            "ori": 0
+        }
+    ],
+    "visual": [
+        "    [ ] [ ] [ ]",
+        "    [ ] [ ] [Y]",
+        "    [ ] [ ] [ ]"
+    ]
+}

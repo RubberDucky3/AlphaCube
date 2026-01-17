@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlphaCube | F2L Solver</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at top right, rgba(79, 70, 229, 0.15), transparent),
+                radial-gradient(circle at bottom left, rgba(79, 70, 229, 0.1), transparent);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            tracking: 0.05em;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            color: #fff;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 1.1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            display: none;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 600px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            position: relative;
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .step-card h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .move-count {
+            font-size: 0.8rem;
+            background: rgba(79, 70, 229, 0.2);
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: #a5b4fc;
+        }
+
+        .moves {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            word-break: break-all;
+            line-height: 1.8;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            box-shadow: none;
+        }
+
+        .copy-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-toast {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .highlight-w {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .highlight-y {
+            color: #facc15;
+            font-weight: bold;
+        }
+
+        .highlight-r {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .highlight-g {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .highlight-b {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .highlight-o {
+            color: #fb923c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>AlphaCube</h1>
+            <p>CFOP Optimization Pipeline &bull; F2L Stage</p>
+        </header>
+
+        <main>
+            <div class="main-card">
+                <div class="input-group">
+                    <label for="scramble">Input Scramble</label>
+                    <textarea id="scramble" placeholder="e.g. R' L' U2 D' B U R F B2 U2 B2 R2 U L2 D' F2 U L2 D2 B R2"
+                        spellcheck="false"></textarea>
+                </div>
+                <div class="actions">
+                    <button id="solveBtn" onclick="solve()">
+                        <span id="btnText">Compute Solution</span>
+                        <div id="loader" class="loader"></div>
+                    </button>
+                    <button style="background: rgba(148, 163, 184, 0.1); color: var(--text-dim); box-shadow: none;"
+                        onclick="clearAll()">Clear</button>
+                </div>
+                <div id="errorToast" class="error-toast"></div>
+            </div>
+
+            <div id="resultsGrid" class="results-grid">
+                <!-- Cards will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function getMoveCount(moves) {
+            if (!moves || moves === "No solution") return 0;
+            return moves.split(' ').filter(m => m.trim()).length;
+        }
+
+        function createCard(title, moves, index) {
+            const isSolved = moves === "Already Solved";
+            const count = isSolved ? 0 : getMoveCount(moves);
+            const delay = index * 0.1;
+            const displayMoves = isSolved ? '<span style="color: var(--success); font-weight: 600;">✨ Already Solved!</span>' : (moves || "---");
+
+            return `
+                <div class="step-card" style="animation-delay: ${delay}s">
+                    ${!isSolved ? `
+                    <button class="copy-btn" onclick="copyMoves(this.closest('.step-card').querySelector('.moves').textContent, this)" title="Copy moves">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    ` : ''}
+                    <h3>
+                        ${title}
+                        <span class="move-count" style="${isSolved ? 'background: rgba(16, 185, 129, 0.2); color: #6ee7b7;' : ''}">${count} moves</span>
+                    </h3>
+                    <div class="moves">${displayMoves}</div>
+                </div>
+            `;
+        }
+
+        async function copyMoves(text, btn) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const original = btn.innerHTML;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                setTimeout(() => btn.innerHTML = original, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('scramble').value = '';
+            document.getElementById('resultsGrid').style.display = 'none';
+            document.getElementById('errorToast').style.display = 'none';
+        }
+
+        async function solve() {
+            const scrambleInput = document.getElementById('scramble');
+            const solveBtn = document.getElementById('solveBtn');
+            const loader = document.getElementById('loader');
+            const btnText = document.getElementById('btnText');
+            const resultsGrid = document.getElementById('resultsGrid');
+            const errorToast = document.getElementById('errorToast');
+
+            const scramble = scrambleInput.value.trim();
+            if (!scramble) {
+                errorToast.textContent = "Please provide a valid scramble sequence.";
+                errorToast.style.display = 'block';
+                return;
+            }
+
+            // UI Feedback
+            solveBtn.disabled = true;
+            loader.style.display = 'block';
+            btnText.style.opacity = '0.5';
+            errorToast.style.display = 'none';
+            resultsGrid.style.display = 'none';
+
+            try {
+                const resp = await fetch('/solve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scramble })
+                });
+
+                const data = await resp.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                resultsGrid.innerHTML = '';
+
+                const steps = [
+                    { title: 'Yellow Cross', key: 'cross_solution', order: 0 },
+                    { title: 'F2L Pair - BL', key: 'f2l_bl', nickname: 'BL' },
+                    { title: 'F2L Pair - BR', key: 'f2l_br', nickname: 'BR' },
+                    { title: 'F2L Pair - FR', key: 'f2l_fr', nickname: 'FR' },
+                    { title: 'F2L Pair - FL', key: 'f2l_fl', nickname: 'FL' }
+                ];
+
+                // Extract sorted list of solved pairs to display them in order 1-4
+                const solvedSteps = [];
+                const handledSlots = new Set();
+
+                if (data.solve_order) {
+                    data.solve_order.forEach((info, i) => {
+                        // info might be "BL + BR (Multi)" or "FR (Easy)"
+                        const typeMatch = info.match(/\(([^)]+)\)/);
+                        const type = typeMatch ? typeMatch[1] : 'Deep';
+                        const slotsText = info.split(' (')[0];
+                        const slots = slotsText.split(' + ');
+
+                        // We associate the moves with the first slot in the combination
+                        const primarySlot = slots[0];
+                        const stepData = steps.find(s => s.nickname === primarySlot);
+
+                        if (stepData) {
+                            solvedSteps.push({
+                                title: `F2L Solve (${slotsText})`,
+                                moves: data[stepData.key],
+                                type: type,
+                                order: i + 1,
+                                isMulti: slots.length > 1
+                            });
+                            slots.forEach(s => handledSlots.add(s.trim()));
+                        }
+                    });
+                }
+
+                // Add Yellow Cross first
+                const crossStep = steps.find(s => s.key === 'cross_solution');
+                resultsGrid.innerHTML += createCard(`Yellow Cross &nbsp;<span class="move-count" style="background: rgba(255,255,255,0.1); color: #fff;">#0 Basic</span>`, data.cross_solution, 0);
+
+                // Add solved pairs in order
+                solvedSteps.forEach((step, i) => {
+                    const typeColor = step.type === 'Easy' ? '#6ee7b7' : (step.type === 'Medium' ? '#fde047' : '#fca5a5');
+                    const typeBg = step.type === 'Easy' ? 'rgba(16, 185, 129, 0.2)' : (step.type === 'Medium' ? 'rgba(250, 204, 21, 0.2)' : 'rgba(239, 68, 68, 0.2)');
+
+                    const titleWithBadge = `${step.title} &nbsp;<span class="move-count" style="background: ${typeBg}; color: ${typeColor};">#${step.order} ${step.type}</span>`;
+                    resultsGrid.innerHTML += createCard(titleWithBadge, step.moves, i + 1);
+                });
+
+                resultsGrid.style.display = 'grid';
+
+            } catch (err) {
+                errorToast.textContent = err.message || "An unexpected error occurred during computation.";
+                errorToast.style.display = 'block';
+            } finally {
+                solveBtn.disabled = false;
+                loader.style.display = 'none';
+                btnText.style.opacity = '1';
+                // Scroll to results
+                if (resultsGrid.style.display === 'grid') {
+                    resultsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
